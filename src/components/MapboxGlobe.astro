@@ -186,9 +186,17 @@ const travelCities = [
 
       // 配置地球样式
       map.on('style.load', () => {
-        // 设置地图语言为中文
-        map.setLayoutProperty('country-label', 'text-field', ['get', 'name_zh-Hans']);
-        map.setLayoutProperty('state-label', 'text-field', ['get', 'name_zh-Hans']);
+        // 尝试设置地图语言为中文（可能某些图层不存在，需要错误处理）
+        try {
+          const layers = map.getStyle().layers;
+          layers.forEach(layer => {
+            if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+              map.setLayoutProperty(layer.id, 'text-field', ['get', 'name_zh-Hans']);
+            }
+          });
+        } catch (e) {
+          console.log('设置中文标签失败:', e);
+        }
         
         // 设置大气层效果
         map.setFog({
@@ -207,42 +215,8 @@ const travelCities = [
         });
       });
 
-      // 启用旋转控制
+      // 地图加载完成后添加标记
       map.on('load', () => {
-        // 自动缓慢旋转
-        let userInteracting = false;
-        let rotationAnimation;
-
-        const rotateCamera = (timestamp) => {
-          if (!userInteracting) {
-            map.rotateTo((map.getBearing() + 0.1) % 360, { duration: 0 });
-          }
-          rotationAnimation = requestAnimationFrame(rotateCamera);
-        };
-
-        map.on('mousedown', () => {
-          userInteracting = true;
-        });
-
-        map.on('mouseup', () => {
-          userInteracting = false;
-        });
-
-        map.on('dragend', () => {
-          userInteracting = false;
-        });
-
-        map.on('touchstart', () => {
-          userInteracting = true;
-        });
-
-        map.on('touchend', () => {
-          userInteracting = false;
-        });
-
-        // 开始旋转动画
-        rotateCamera(0);
-
         // 添加城市标记
         const addMarkers = (cities, type) => {
           cities.forEach((city) => {
