@@ -1,7 +1,7 @@
 ---
 import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
 import Layout from '../layouts/BlogPost.astro';
-import Globe from '../components/Globe.astro';
+import MapboxGlobe from '../components/MapboxGlobe.astro';
 ---
 
 <Layout
@@ -31,10 +31,10 @@ import Globe from '../components/Globe.astro';
 	
 	<p>
 		旅行让我看到了不同的世界，体验了不同的文化。下面是我去过的一些地方，
-		你可以与地球仪互动，点击查看详情。
+		你可以拖拽地球仪旋转查看。蓝色标记表示居住过的城市，橙色标记表示旅行过的地方。
 	</p>
 
-	<Globe />
+	<MapboxGlobe />
 
 	<h2>🎯 关注领域</h2>
 	

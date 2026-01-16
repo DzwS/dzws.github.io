@@ -1,0 +1,253 @@
+---
+// Mapbox GL JS 3D Globe Component
+interface Props {
+  mapboxToken?: string;
+}
+
+const { mapboxToken = 'pk.eyJ1IjoiZGl5Z29kYmVzdCIsImEiOiJjbWo0M2J4d2gxMHFuM2xzOHduYWUyOG03In0.L1Hpyc9xgbqqckjFPv2Zdw' } = Astro.props;
+
+// 定义城市数据
+const residenceCities = [
+  { name: '1995.06 临沂', coords: [118.35053086280824, 35.10379488422636] },
+  { name: '2012.09 武汉', coords: [114.2999353, 30.5951051] },
+  { name: '2015.12 杭州', coords: [120.2052342, 30.2489634] },
+  { name: '2017.05 上海', coords: [121.4692071, 31.2322758] },
+  { name: '2021.12 格拉斯哥', coords: [-4.2488787, 55.8609825] },
+  { name: '2021.08 圣安德鲁斯', coords: [-2.7955844, 56.3403902] },
+  { name: '2023.10 新加坡', coords: [103.851959, 1.29027] },
+];
+
+const travelCities = [
+  { name: '2019.03 大阪', coords: [135.5014539, 34.6937569] },
+  { name: '2019.04 东京', coords: [139.7594549, 35.6828387] },
+  { name: '2019.04 京都', coords: [135.7556075, 35.021041] },
+  { name: '2022.12 巴黎', coords: [2.3200571537017827, 48.85914127882758] },
+  { name: '2022.12 罗马', coords: [12.483054399490358, 41.893639222307314] },
+  { name: '2023.11 香港', coords: [114.1693611, 22.3193039] },
+  { name: '2024.08 河口湖', coords: [138.7448243, 35.5130603] },
+  { name: '2025.05 巴厘岛', coords: [115.1919203, -8.2271303] },
+  // 可以添加更多城市...
+];
+---
+
+<div class="mapbox-globe-wrapper">
+  <div id="mapbox-globe" class="mapbox-globe"></div>
+  
+  <div class="mapbox-legend">
+    <div class="mapbox-legend__item">
+      <span class="mapbox-legend__dot mapbox-legend__dot--residence" aria-hidden="true"></span>
+      <span>居住</span>
+    </div>
+    <div class="mapbox-legend__item">
+      <span class="mapbox-legend__dot mapbox-legend__dot--travel" aria-hidden="true"></span>
+      <span>旅行</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .mapbox-globe-wrapper {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    margin: 2rem 0;
+  }
+
+  .mapbox-globe {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .mapbox-legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+  }
+
+  .mapbox-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .mapbox-legend__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mapbox-legend__dot--residence {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+
+  .mapbox-legend__dot--travel {
+    background: #f97316;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
+  }
+
+  /* 自定义标记样式 */
+  :global(.mapbox-marker) {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.mapbox-marker:hover) {
+    transform: scale(1.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  :global(.mapbox-marker--residence) {
+    background: #3b82f6;
+  }
+
+  :global(.mapbox-marker--travel) {
+    background: #f97316;
+  }
+
+  /* Mapbox logo 样式调整 */
+  :global(.mapboxgl-ctrl-logo) {
+    margin: 0 0 5px 5px !important;
+  }
+</style>
+
+<script define:vars={{ mapboxToken, residenceCities, travelCities }}>
+  // 等待页面加载
+  if (typeof window !== 'undefined') {
+    // 动态加载 Mapbox GL JS
+    const loadMapbox = () => {
+      return new Promise((resolve, reject) => {
+        if (window.mapboxgl) {
+          resolve(window.mapboxgl);
+          return;
+        }
+
+        // 加载 CSS
+        const link = document.createElement('link');
+        link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+
+        // 加载 JS
+        const script = document.createElement('script');
+        script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js';
+        script.onload = () => resolve(window.mapboxgl);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    };
+
+    loadMapbox().then((mapboxgl) => {
+      mapboxgl.accessToken = mapboxToken;
+
+      const map = new mapboxgl.Map({
+        container: 'mapbox-globe',
+        style: 'mapbox://styles/mapbox/standard',
+        projection: 'globe', // 关键：使用地球投影
+        center: [120, 30], // 中心在中国
+        zoom: 1.5,
+        pitch: 0,
+        bearing: 0,
+      });
+
+      // 配置地球样式
+      map.on('style.load', () => {
+        // 设置大气层效果
+        map.setFog({
+          color: 'rgb(220, 230, 240)', // 淡蓝色大气层
+          'high-color': 'rgb(36, 92, 223)', // 高空颜色
+          'horizon-blend': 0.02, // 地平线混合
+          'space-color': 'rgb(11, 11, 25)', // 太空颜色
+          'star-intensity': 0.6, // 星星强度
+        });
+
+        // 设置全局光照
+        map.setLight({
+          anchor: 'viewport',
+          color: 'white',
+          intensity: 0.4,
+        });
+      });
+
+      // 启用旋转控制
+      map.on('load', () => {
+        // 自动缓慢旋转
+        let userInteracting = false;
+        let rotationAnimation;
+
+        const rotateCamera = (timestamp) => {
+          if (!userInteracting) {
+            map.rotateTo((map.getBearing() + 0.1) % 360, { duration: 0 });
+          }
+          rotationAnimation = requestAnimationFrame(rotateCamera);
+        };
+
+        map.on('mousedown', () => {
+          userInteracting = true;
+        });
+
+        map.on('mouseup', () => {
+          userInteracting = false;
+        });
+
+        map.on('dragend', () => {
+          userInteracting = false;
+        });
+
+        map.on('touchstart', () => {
+          userInteracting = true;
+        });
+
+        map.on('touchend', () => {
+          userInteracting = false;
+        });
+
+        // 开始旋转动画
+        rotateCamera(0);
+
+        // 添加城市标记
+        const addMarkers = (cities, type) => {
+          cities.forEach((city) => {
+            const el = document.createElement('div');
+            el.className = `mapbox-marker mapbox-marker--${type}`;
+            el.setAttribute('title', city.name);
+
+            new mapboxgl.Marker(el)
+              .setLngLat(city.coords)
+              .setPopup(
+                new mapboxgl.Popup({ offset: 25 })
+                  .setHTML(`<div style="padding: 8px; font-size: 14px; font-weight: 500;">${city.name}</div>`)
+              )
+              .addTo(map);
+          });
+        };
+
+        addMarkers(residenceCities, 'residence');
+        addMarkers(travelCities, 'travel');
+      });
+
+      // 响应式调整
+      const resizeObserver = new ResizeObserver(() => {
+        map.resize();
+      });
+      resizeObserver.observe(document.getElementById('mapbox-globe'));
+    }).catch((error) => {
+      console.error('Failed to load Mapbox GL JS:', error);
+    });
+  }
+</script>

@@ -13,7 +13,9 @@
     "@astrojs/rss": "^4.0.15",
     "@astrojs/sitemap": "^3.7.0",
     "astro": "^5.16.10",
+    "cobe": "^0.6.5",
     "globe.gl": "^2.45.0",
+    "mapbox-gl": "^3.18.0",
     "sharp": "^0.34.3",
     "three": "^0.182.0"
   }
