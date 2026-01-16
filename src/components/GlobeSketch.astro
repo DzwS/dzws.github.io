@@ -1,0 +1,187 @@
+---
+// 线条风格地球仪 - 清晰的线条绘画风格
+---
+
+<div class="sketch-globe-wrapper">
+  <canvas 
+    id="sketch-canvas" 
+    width="800" 
+    height="800"
+  ></canvas>
+  <div id="sketch-labels"></div>
+</div>
+
+<style>
+  .sketch-globe-wrapper {
+    width: 100%;
+    max-width: 650px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #sketch-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  #sketch-labels {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 600px;
+    height: 600px;
+  }
+
+  .sketch-label {
+    position: absolute;
+    background: white;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    border: 1px solid #ddd;
+    transition: opacity 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    .sketch-globe-wrapper {
+      padding: 1rem;
+      border-radius: 12px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹坐标
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.12 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.12 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.10 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.10 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.10 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.10 },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.09 },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.09 },
+  ];
+
+  // 转换为弧度
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.1,
+  }));
+
+  // 创建素描标签
+  function createSketchLabels(phi, theta, locations) {
+    const labelsContainer = document.getElementById('sketch-labels');
+    if (!labelsContainer) return;
+
+    labelsContainer.innerHTML = '';
+
+    const radius = 250;
+    const centerX = 300;
+    const centerY = 300;
+
+    locations.forEach(loc => {
+      const lat = toRadians(loc.lat);
+      const lng = toRadians(loc.lng);
+
+      const cosPhi = Math.cos(lat);
+      const sinPhi = Math.sin(lat);
+      const cosTheta = Math.cos(lng + phi);
+      const sinTheta = Math.sin(lng + phi);
+
+      const x = radius * cosPhi * sinTheta;
+      const y = -radius * sinPhi;
+      const z = radius * cosPhi * cosTheta;
+
+      if (z > 0) {
+        const label = document.createElement('div');
+        label.className = 'sketch-label';
+        label.textContent = loc.name;
+        label.style.left = (centerX + x) + 'px';
+        label.style.top = (centerY + y) + 'px';
+        
+        const opacity = Math.min(1, z / radius + 0.3);
+        label.style.opacity = opacity;
+        
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // 初始化线条风格地球仪
+  async function initSketchGlobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('sketch-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing sketch-style globe...');
+
+      let phi = 0;
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: 1600,
+        height: 1600,
+        phi: 0,
+        theta: 0.25,
+        dark: 0,                    // 亮色模式
+        diffuse: 0.8,               // 减少漫反射，更清晰
+        mapSamples: 30000,          // 高采样率，线条更清晰
+        mapBrightness: 8,           // 高亮度，线条明显
+        baseColor: [1, 1, 1],       // 白色底色
+        markerColor: [0.2, 0.2, 0.2], // 深灰色标记
+        glowColor: [0.8, 0.8, 0.8], // 浅灰光晕
+        opacity: 1,                 // 完全不透明
+        offset: [0, 0],
+        markers: markers,
+        onRender: (state) => {
+          // 缓慢旋转
+          state.phi = phi;
+          phi += 0.004;
+          
+          // 更新标签位置
+          createSketchLabels(phi, 0.4, locations);
+        }
+      });
+
+      console.log('Sketch globe initialized successfully');
+
+      // 清理
+      return () => {
+        globe.destroy();
+      };
+    } catch (error) {
+      console.error('Error initializing sketch globe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSketchGlobe);
+  } else {
+    initSketchGlobe();
+  }
+</script>

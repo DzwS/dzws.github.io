@@ -1,0 +1,165 @@
+---
+// 极简风格地球仪 - 黑白配色
+---
+
+<div id="minimal-globe"></div>
+
+<style>
+  #minimal-globe {
+    width: 100%;
+    height: 500px;
+    margin: 2rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    position: relative;
+  }
+  
+  #minimal-globe canvas {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    #minimal-globe {
+      height: 350px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹数据
+  const footprints = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#000000', size: 0.2 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', year: 2024, color: '#000000', size: 0.2 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#000000', size: 0.2 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#000000', size: 0.2 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', year: 2022, color: '#000000', size: 0.2 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', year: 2022, color: '#000000', size: 0.2 },
+  ];
+
+  // 连接线数据
+  const arcs = [
+    { startLat: 39.9042, startLng: 116.4074, endLat: 31.2304, endLng: 121.4737 },
+    { startLat: 31.2304, startLng: 121.4737, endLat: 22.3193, endLng: 114.1694 },
+    { startLat: 22.3193, startLng: 114.1694, endLat: 35.6762, endLng: 139.6503 },
+  ];
+
+  // 初始化函数
+  function initGlobe() {
+    const container = document.getElementById('minimal-globe');
+    if (!container) {
+      console.error('Globe container not found');
+      return;
+    }
+
+    console.log('Starting minimal globe initialization...');
+
+    // 动态导入 globe.gl
+    import('globe.gl')
+      .then((module) => {
+        const Globe = module.default;
+        console.log('Globe.gl module loaded');
+
+        try {
+          const globe = Globe()(container)
+            // 极简风格：黑白地球
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
+            // 无背景图
+            .showAtmosphere(false)
+            
+            // 添加足迹点
+            .pointsData(footprints)
+            .pointAltitude(0.01)
+            .pointColor('color')
+            .pointRadius(0.4)
+            .pointLabel((d) => `
+              <div style="
+                background: white;
+                padding: 4px 8px;
+                border-radius: 2px;
+                color: #333;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-size: 12px;
+                border: 1px solid #ddd;
+              ">
+                ${d.name} · ${d.year}
+              </div>
+            `)
+            
+            // 极简连接线
+            .arcsData(arcs)
+            .arcColor(() => 'rgba(0, 0, 0, 0.2)')
+            .arcDashLength(0.4)
+            .arcDashGap(0.4)
+            .arcDashAnimateTime(4000)
+            .arcStroke(0.2)
+            
+            // 控制设置
+            .enablePointerInteraction(true);
+
+          // 慢速旋转
+          if (globe.controls) {
+            globe.controls().autoRotate = true;
+            globe.controls().autoRotateSpeed = 0.2;
+            globe.controls().enableZoom = true;
+            globe.controls().minDistance = 150;
+            globe.controls().maxDistance = 400;
+          }
+
+          // 设置初始视角
+          globe.pointOfView({ lat: 30, lng: 110, altitude: 2.5 }, 1000);
+
+          // 响应式处理
+          const handleResize = () => {
+            const container = document.getElementById('minimal-globe');
+            if (container && globe) {
+              globe.width(container.offsetWidth);
+              globe.height(container.offsetHeight);
+            }
+          };
+          
+          window.addEventListener('resize', handleResize);
+          setTimeout(handleResize, 100);
+
+          // 点击交互
+          globe.onPointClick((point) => {
+            globe.pointOfView({
+              lat: point.lat,
+              lng: point.lng,
+              altitude: 1.5
+            }, 1000);
+          });
+
+          console.log('Minimal globe initialized successfully');
+        } catch (error) {
+          console.error('Error creating globe:', error);
+          container.innerHTML = `
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              color: #666;
+              text-align: center;
+              padding: 2rem;
+            ">
+              <div>
+                <p>加载失败</p>
+              </div>
+            </div>
+          `;
+        }
+      })
+      .catch((error) => {
+        console.error('Error loading globe.gl module:', error);
+      });
+  }
+
+  // 等待 DOM 加载完成
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGlobe);
+  } else {
+    setTimeout(initGlobe, 100);
+  }
+</script>

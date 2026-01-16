@@ -50,18 +50,28 @@
 
     // 足迹数据
     const footprints = [
-      { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#ff6b6b', size: 0.5 },
-      { lat: 31.2304, lng: 121.4737, name: '上海', year: 2024, color: '#4ecdc4', size: 0.5 },
-      { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#45b7d1', size: 0.5 },
-      { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#96ceb4', size: 0.5 },
-      { lat: 37.5665, lng: 126.9780, name: '首尔', year: 2022, color: '#ffeaa7', size: 0.5 },
-      { lat: 1.3521, lng: 103.8198, name: '新加坡', year: 2022, color: '#dfe6e9', size: 0.5 },
+      { lat: 29.2685, lng: 117.1786, name: '景德镇', year: 2024, color: '#ff6b6b', size: 0.5 },
+      { lat: 24.4798, lng: 118.0894, name: '厦门', year: 2024, color: '#4ecdc4', size: 0.5 },
+      { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#45b7d1', size: 0.5 },
+      { lat: 22.5431, lng: 114.0579, name: '深圳', year: 2023, color: '#96ceb4', size: 0.5 },
+      { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#ffeaa7', size: 0.5 },
+      { lat: 22.1987, lng: 113.5439, name: '澳门', year: 2023, color: '#dfe6e9', size: 0.5 },
+      { lat: 25.0917, lng: 117.0172, name: '龙岩', year: 2023, color: '#74b9ff', size: 0.5 },
+      { lat: 24.8736, lng: 118.6757, name: '泉州', year: 2022, color: '#a29bfe', size: 0.5 },
+      { lat: 24.5130, lng: 117.6471, name: '漳州', year: 2022, color: '#fd79a8', size: 0.5 },
+      { lat: 23.0515, lng: 112.4653, name: '肇庆', year: 2022, color: '#fdcb6e', size: 0.5 },
+      { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#e17055', size: 0.5 },
+      { lat: 34.6937, lng: 135.5023, name: '大阪', year: 2023, color: '#00b894', size: 0.5 },
+      { lat: 35.0116, lng: 135.7681, name: '京都', year: 2023, color: '#00cec9', size: 0.5 },
+      { lat: 34.6851, lng: 135.8048, name: '奈良', year: 2023, color: '#6c5ce7', size: 0.5 },
     ];
 
     // 连接线数据
     const arcs = [
-      { startLat: 39.9042, startLng: 116.4074, endLat: 31.2304, endLng: 121.4737 },
-      { startLat: 31.2304, startLng: 121.4737, endLat: 22.3193, endLng: 114.1694 },
+      { startLat: 29.2685, startLng: 117.1786, endLat: 24.4798, endLng: 118.0894 },
+      { startLat: 24.4798, startLng: 118.0894, endLat: 39.9042, endLng: 116.4074 },
+      { startLat: 39.9042, startLng: 116.4074, endLat: 22.5431, endLng: 114.0579 },
+      { startLat: 22.5431, startLng: 114.0579, endLat: 22.3193, endLng: 114.1694 },
       { startLat: 22.3193, startLng: 114.1694, endLat: 35.6762, endLng: 139.6503 },
     ];
 
@@ -108,13 +118,41 @@
         // 控制设置
         .enablePointerInteraction(true);
 
-      // 自动旋转
-      globe.controls().autoRotate = true;
-      globe.controls().autoRotateSpeed = 0.5;
+      // 禁用自动旋转
+      globe.controls().autoRotate = false;
+      globe.controls().autoRotateSpeed = 0;
       globe.controls().enableZoom = true;
+      globe.controls().enableRotate = true; // 允许手动旋转
+      globe.controls().enablePan = true; // 允许平移
+      
+      // 优化缩放设置
+      globe.controls().zoomSpeed = 2; // 增加缩放速度（默认是1）
+      globe.controls().minDistance = 101; // 最小距离（可以放大到很近）
+      globe.controls().maxDistance = 1000; // 最大距离（可以缩小到很远）
+      globe.controls().enableDamping = true; // 启用阻尼（更流畅）
+      globe.controls().dampingFactor = 0.1; // 阻尼系数
 
-      // 设置初始视角
-      globe.pointOfView({ lat: 35, lng: 105, altitude: 2 }, 1000);
+      // 自定义滚轮缩放处理
+      let currentAltitude = 2;
+      container.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const delta = event.deltaY;
+        // 根据滚轮方向调整高度
+        currentAltitude += delta * 0.001;
+        // 限制高度范围
+        currentAltitude = Math.max(0.5, Math.min(10, currentAltitude));
+        
+        // 获取当前视角
+        const pov = globe.pointOfView();
+        globe.pointOfView({ 
+          lat: pov.lat, 
+          lng: pov.lng, 
+          altitude: currentAltitude 
+        }, 0); // 即时响应，不要动画
+      }, { passive: false });
+
+      // 设置初始视角 - 聚焦在厦门
+      globe.pointOfView({ lat: 24.4798, lng: 118.0894, altitude: 2 }, 1000);
 
       // 响应式处理
       const handleResize = () => {

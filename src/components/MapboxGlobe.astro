@@ -56,8 +56,8 @@ const travelCities = [
   .mapbox-globe {
     width: 100%;
     height: 100%;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 0; /* 移除圆角 */
+    overflow: visible; /* 允许溢出 */
   }
 
   .mapbox-legend {
@@ -69,6 +69,7 @@ const travelCities = [
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 10;
+    backdrop-filter: blur(10px); /* 添加模糊背景效果 */
   }
 
   .mapbox-legend__item {
@@ -157,16 +158,38 @@ const travelCities = [
 
       const map = new mapboxgl.Map({
         container: 'mapbox-globe',
-        style: 'mapbox://styles/mapbox/standard',
+        style: 'mapbox://styles/mapbox/light-v11', // 使用简约的浅色样式
         projection: 'globe', // 关键：使用地球投影
         center: [120, 30], // 中心在中国
         zoom: 1.5,
+        minZoom: 0.5, // 最小缩放级别
+        maxZoom: 8, // 最大缩放级别
         pitch: 0,
         bearing: 0,
+        // 明确启用交互
+        interactive: true,
+        scrollZoom: true, // 鼠标滚轮缩放
+        boxZoom: true, // 框选缩放
+        dragRotate: true, // 拖拽旋转
+        dragPan: true, // 拖拽平移
+        keyboard: true, // 键盘控制
+        doubleClickZoom: true, // 双击缩放
+        touchZoomRotate: true, // 触摸缩放旋转
       });
+
+      // 添加导航控制器（放大缩小按钮）
+      map.addControl(new mapboxgl.NavigationControl({
+        showCompass: true,
+        showZoom: true,
+        visualizePitch: true
+      }), 'top-right');
 
       // 配置地球样式
       map.on('style.load', () => {
+        // 设置地图语言为中文
+        map.setLayoutProperty('country-label', 'text-field', ['get', 'name_zh-Hans']);
+        map.setLayoutProperty('state-label', 'text-field', ['get', 'name_zh-Hans']);
+        
         // 设置大气层效果
         map.setFog({
           color: 'rgb(220, 230, 240)', // 淡蓝色大气层

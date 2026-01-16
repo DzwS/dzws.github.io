@@ -1,0 +1,295 @@
+---
+// 蓝图风格地球仪 - 技术图纸风格
+---
+
+<div class="blueprint-container">
+  <div class="grid-overlay"></div>
+  <canvas 
+    id="blueprint-canvas" 
+    width="800" 
+    height="800"
+  ></canvas>
+  <div id="blueprint-labels"></div>
+  <div class="corner-marks">
+    <div class="corner top-left"></div>
+    <div class="corner top-right"></div>
+    <div class="corner bottom-left"></div>
+    <div class="corner bottom-right"></div>
+  </div>
+</div>
+
+<style>
+  .blueprint-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: 3rem;
+    background: #0a1929;
+    border-radius: 12px;
+    box-shadow: 
+      0 0 0 1px rgba(100, 181, 246, 0.3),
+      0 10px 40px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      linear-gradient(rgba(100, 181, 246, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100, 181, 246, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #blueprint-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    position: relative;
+    z-index: 2;
+  }
+
+  #blueprint-labels {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 600px;
+    height: 600px;
+    z-index: 4;
+  }
+
+  .blueprint-label {
+    position: absolute;
+    background: rgba(10, 25, 41, 0.95);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64b5f6;
+    box-shadow: 0 0 10px rgba(100, 181, 246, 0.3);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(100, 181, 246, 0.5);
+    transition: opacity 0.3s ease;
+    font-family: 'Courier New', monospace;
+  }
+
+  .corner-marks {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(100, 181, 246, 0.5);
+  }
+
+  .corner.top-left {
+    top: 2rem;
+    left: 2rem;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .corner.top-right {
+    top: 2rem;
+    right: 2rem;
+    border-left: none;
+    border-bottom: none;
+  }
+
+  .corner.bottom-left {
+    bottom: 2rem;
+    left: 2rem;
+    border-right: none;
+    border-top: none;
+  }
+
+  .corner.bottom-right {
+    bottom: 2rem;
+    right: 2rem;
+    border-left: none;
+    border-top: none;
+  }
+
+  @media (max-width: 768px) {
+    .blueprint-container {
+      padding: 2rem 1rem;
+    }
+
+    .corner {
+      width: 20px;
+      height: 20px;
+    }
+
+    .corner.top-left,
+    .corner.top-right {
+      top: 1rem;
+    }
+
+    .corner.bottom-left,
+    .corner.bottom-right {
+      bottom: 1rem;
+    }
+
+    .corner.top-left,
+    .corner.bottom-left {
+      left: 1rem;
+    }
+
+    .corner.top-right,
+    .corner.bottom-right {
+      right: 1rem;
+    }
+  }
+</style>
+
+<script>
+  // 足迹数据
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.12 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.12 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.10 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.10 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.10 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.10 },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.09 },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.09 },
+  ];
+
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.1,
+  }));
+
+  // 创建蓝图标签
+  function createBlueprintLabels(phi, theta, locations) {
+    const labelsContainer = document.getElementById('blueprint-labels');
+    if (!labelsContainer) return;
+
+    labelsContainer.innerHTML = '';
+
+    const radius = 250;
+    const centerX = 300;
+    const centerY = 300;
+
+    locations.forEach(loc => {
+      const lat = toRadians(loc.lat);
+      const lng = toRadians(loc.lng);
+
+      const cosPhi = Math.cos(lat);
+      const sinPhi = Math.sin(lat);
+      const cosTheta = Math.cos(lng + phi);
+      const sinTheta = Math.sin(lng + phi);
+
+      const x = radius * cosPhi * sinTheta;
+      const y = -radius * sinPhi;
+      const z = radius * cosPhi * cosTheta;
+
+      if (z > 0) {
+        const label = document.createElement('div');
+        label.className = 'blueprint-label';
+        label.textContent = loc.name;
+        label.style.left = (centerX + x) + 'px';
+        label.style.top = (centerY + y) + 'px';
+        
+        const opacity = Math.min(1, z / radius + 0.3);
+        label.style.opacity = opacity;
+        
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // 初始化蓝图风格地球仪
+  async function initBlueprintGlobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('blueprint-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing blueprint globe...');
+
+      let phi = 0;
+      let width = 0;
+      
+      const onResize = () => {
+        if (canvas) {
+          width = canvas.offsetWidth;
+        }
+      };
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: width * 2,
+        height: width * 2,
+        phi: 0,
+        theta: 0.3,
+        dark: 1,                        // 暗色模式
+        diffuse: 0.4,                   // 低漫反射，线条锐利
+        mapSamples: 40000,              // 极高采样
+        mapBrightness: 2,               // 适中亮度
+        baseColor: [0.04, 0.10, 0.16],  // 深蓝底色 #0a1929
+        markerColor: [0.39, 0.71, 0.96], // 蓝色标记 #64b5f6
+        glowColor: [0.25, 0.51, 0.76],  // 蓝色光晕 #4080c0
+        markers: markers,
+        scale: 1,
+        opacity: 1,
+        onRender: (state) => {
+          // 缓慢旋转
+          state.phi = phi;
+          phi += 0.002;
+          
+          // 响应式
+          state.width = width * 2;
+          state.height = width * 2;
+          
+          // 更新标签
+          createBlueprintLabels(phi, 0.3, locations);
+        }
+      });
+
+      console.log('Blueprint globe initialized successfully');
+
+      // 清理
+      return () => {
+        globe.destroy();
+        window.removeEventListener('resize', onResize);
+      };
+    } catch (error) {
+      console.error('Error initializing blueprint globe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlueprintGlobe);
+  } else {
+    initBlueprintGlobe();
+  }
+</script>

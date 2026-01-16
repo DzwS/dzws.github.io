@@ -1,0 +1,125 @@
+---
+// Cobe 地球仪 - 优雅简约的 WebGL 地球
+---
+
+<div class="cobe-wrapper">
+  <canvas 
+    id="cobe-canvas" 
+    width="600" 
+    height="600"
+    style="width: 600px; height: 600px; max-width: 100%; aspect-ratio: 1;"
+  ></canvas>
+</div>
+
+<style>
+  .cobe-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+    padding: 2rem 0;
+  }
+
+  #cobe-canvas {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+  }
+
+  @media (max-width: 768px) {
+    #cobe-canvas {
+      max-width: 400px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹坐标数据 - 转换为经纬度弧度
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京' },      // 北京
+    { lat: 31.2304, lng: 121.4737, name: '上海' },      // 上海
+    { lat: 22.3193, lng: 114.1694, name: '香港' },      // 香港
+    { lat: 35.6762, lng: 139.6503, name: '东京' },      // 东京
+    { lat: 37.5665, lng: 126.9780, name: '首尔' },      // 首尔
+    { lat: 1.3521, lng: 103.8198, name: '新加坡' },     // 新加坡
+  ];
+
+  // 转换经纬度为弧度
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  // 将位置转换为 phi 和 theta
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: 0.08,
+  }));
+
+  // 初始化 Cobe
+  async function initCobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('cobe-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing Cobe globe...');
+
+      let phi = 0;
+      let width = 0;
+      const onResize = () => {
+        if (canvas) {
+          width = canvas.offsetWidth;
+        }
+      };
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: width * 2,
+        height: width * 2,
+        phi: 0,
+        theta: 0.3,
+        dark: 0,
+        diffuse: 1.2,
+        mapSamples: 16000,
+        mapBrightness: 6,
+        baseColor: [0.3, 0.3, 0.3],
+        markerColor: [0.1, 0.8, 1],
+        glowColor: [1, 1, 1],
+        markers: markers,
+        onRender: (state) => {
+          // 自动旋转
+          state.phi = phi;
+          phi += 0.005;
+          
+          // 响应窗口大小
+          state.width = width * 2;
+          state.height = width * 2;
+        }
+      });
+
+      console.log('Cobe globe initialized successfully');
+
+      // 清理函数
+      return () => {
+        globe.destroy();
+        window.removeEventListener('resize', onResize);
+      };
+    } catch (error) {
+      console.error('Error initializing Cobe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCobe);
+  } else {
+    initCobe();
+  }
+</script>

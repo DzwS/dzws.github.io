@@ -1,0 +1,236 @@
+---
+// 艺术线条地球仪 - 手绘插画风格
+---
+
+<div class="art-globe-container">
+  <canvas 
+    id="art-canvas" 
+    width="800" 
+    height="800"
+  ></canvas>
+  <div id="location-labels"></div>
+  <div class="legend">
+    <div class="legend-item">
+      <span class="dot"></span>
+      <span class="text">到访城市</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .art-globe-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 3rem auto;
+    padding: 3rem 2rem 2rem;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    border-radius: 20px;
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    position: relative;
+  }
+
+  #art-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: contrast(1.1) saturate(1.1);
+  }
+
+  #location-labels {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: 600px;
+    height: 600px;
+  }
+
+  .location-label {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    transition: opacity 0.3s ease;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed rgba(0, 0, 0, 0.1);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    background: #e74c3c;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+  }
+
+  @media (max-width: 768px) {
+    .art-globe-container {
+      padding: 2rem 1rem 1rem;
+      border-radius: 12px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹数据
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.15 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.15 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.12 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.12 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.12 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.12 },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.10 },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.10 },
+  ];
+
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.12,
+  }));
+
+  // 计算 3D 位置并创建标签
+  function createLabels(phi, theta, locations) {
+    const labelsContainer = document.getElementById('location-labels');
+    if (!labelsContainer) return;
+
+    // 清空现有标签
+    labelsContainer.innerHTML = '';
+
+    const radius = 250; // 地球仪半径（像素）
+    const centerX = 300;
+    const centerY = 300;
+
+    locations.forEach(loc => {
+      const lat = toRadians(loc.lat);
+      const lng = toRadians(loc.lng);
+
+      // 计算 3D 坐标
+      const cosPhi = Math.cos(lat);
+      const sinPhi = Math.sin(lat);
+      const cosTheta = Math.cos(lng + phi);
+      const sinTheta = Math.sin(lng + phi);
+
+      const x = radius * cosPhi * sinTheta;
+      const y = -radius * sinPhi;
+      const z = radius * cosPhi * cosTheta;
+
+      // 只显示面向前方的标签（z > 0）
+      if (z > 0) {
+        const label = document.createElement('div');
+        label.className = 'location-label';
+        label.textContent = loc.name;
+        label.style.left = (centerX + x) + 'px';
+        label.style.top = (centerY + y) + 'px';
+        
+        // 根据深度调整透明度
+        const opacity = Math.min(1, z / radius + 0.3);
+        label.style.opacity = opacity;
+        
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // 初始化艺术风格地球仪
+  async function initArtGlobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('art-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing art-style globe...');
+
+      let phi = 0;
+      let width = 0;
+      
+      const onResize = () => {
+        if (canvas) {
+          width = canvas.offsetWidth;
+        }
+      };
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: width * 2,
+        height: width * 2,
+        phi: 0,
+        theta: 0.3,
+        dark: 0,                      // 亮色模式
+        diffuse: 1.2,                 // 适度漫反射
+        mapSamples: 35000,            // 超高采样，线条极其清晰
+        mapBrightness: 10,            // 超高亮度
+        baseColor: [0.95, 0.95, 0.95], // 浅灰底色
+        markerColor: [0.91, 0.30, 0.24], // 红色标记 (e74c3c)
+        glowColor: [0.5, 0.5, 0.5],   // 中灰光晕
+        markers: markers,
+        scale: 1,
+        opacity: 1,
+        onRender: (state) => {
+          // 平滑旋转
+          state.phi = phi;
+          phi += 0.003;
+          
+          // 响应式
+          state.width = width * 2;
+          state.height = width * 2;
+          
+          // 更新标签位置
+          createLabels(phi, 0.3, locations);
+        }
+      });
+
+      console.log('Art globe initialized successfully');
+
+      // 清理
+      return () => {
+        globe.destroy();
+        window.removeEventListener('resize', onResize);
+      };
+    } catch (error) {
+      console.error('Error initializing art globe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initArtGlobe);
+  } else {
+    initArtGlobe();
+  }
+</script>

@@ -1,0 +1,298 @@
+---
+// 完美匹配截图的简约地球仪 - Cobe 优化版
+---
+
+<div class="perfect-globe-container">
+  <canvas 
+    id="perfect-canvas" 
+    width="600" 
+    height="600"
+  ></canvas>
+  <div id="perfect-labels"></div>
+  <div class="perfect-legend">
+    <div class="legend-item">
+      <span class="legend-dot residence"></span>
+      <span class="legend-text">居住</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot travel"></span>
+      <span class="legend-text">旅行</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .perfect-globe-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    background: #f5f7fa;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  #perfect-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: grab;
+  }
+
+  #perfect-canvas:active {
+    cursor: grabbing;
+  }
+
+  #perfect-labels {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .perfect-label {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 400;
+    color: #6b7280;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .perfect-legend {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 3;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .legend-dot.residence {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+
+  .legend-dot.travel {
+    background: #f97316;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+  }
+
+  .legend-text {
+    font-size: 13px;
+    color: #4a5568;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .perfect-globe-container {
+      padding: 20px;
+    }
+
+    #perfect-labels {
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+    }
+
+    .perfect-label {
+      font-size: 11px;
+    }
+
+    .perfect-legend {
+      bottom: 30px;
+      right: 30px;
+      padding: 10px 12px;
+    }
+  }
+</style>
+
+<script>
+  // 地理标签
+  const geoLabels = [
+    { lat: 45, lng: -140, name: '北太平洋' },
+    { lat: 60, lng: -100, name: '加拿大' },
+    { lat: 38, lng: -95, name: '美国' },
+    { lat: 15, lng: -90, name: '墨西哥' },
+    { lat: -8, lng: -55, name: '巴西' },
+    { lat: 5, lng: -75, name: '哥伦比亚' },
+    { lat: 10, lng: -80, name: '哥斯达黎加' },
+    { lat: 20, lng: -30, name: '北大西洋' },
+    { lat: 50, lng: 10, name: '欧洲' },
+    { lat: 10, lng: 20, name: '非洲' },
+    { lat: 35, lng: 105, name: '中国' },
+    { lat: 20, lng: -80, name: '加勒比海' },
+    { lat: 55, lng: 155, name: '北太西洋' },
+  ];
+
+  // 足迹坐标
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.12, type: 'residence' },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.12, type: 'residence' },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.10, type: 'travel' },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.10, type: 'travel' },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.10, type: 'travel' },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.10, type: 'travel' },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.09, type: 'travel' },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.09, type: 'travel' },
+  ];
+
+  // 转换为弧度
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.1,
+    color: loc.type === 'residence' ? [0.231, 0.510, 0.965] : [0.976, 0.451, 0.086],
+  }));
+
+  // 创建地理标签
+  function createLabels(phi, labels) {
+    const labelsContainer = document.getElementById('perfect-labels');
+    if (!labelsContainer) return;
+
+    labelsContainer.innerHTML = '';
+
+    const radius = 250;
+    const centerX = 300;
+    const centerY = 300;
+
+    labels.forEach(loc => {
+      const lat = toRadians(loc.lat);
+      const lng = toRadians(loc.lng);
+
+      const cosPhi = Math.cos(lat);
+      const sinPhi = Math.sin(lat);
+      const cosTheta = Math.cos(lng + phi);
+      const sinTheta = Math.sin(lng + phi);
+
+      const x = radius * cosPhi * sinTheta;
+      const y = -radius * sinPhi;
+      const z = radius * cosPhi * cosTheta;
+
+      if (z > -80) {
+        const label = document.createElement('div');
+        label.className = 'perfect-label';
+        label.textContent = loc.name;
+        label.style.left = (centerX + x) + 'px';
+        label.style.top = (centerY + y) + 'px';
+        
+        const opacity = Math.max(0, Math.min(0.9, (z + 80) / 280));
+        label.style.opacity = opacity;
+        
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // 初始化地球仪
+  async function initPerfectGlobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('perfect-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing perfect minimalist globe...');
+
+      let phi = 0;
+      let isDragging = false;
+      let lastX = 0;
+
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          const deltaX = e.clientX - lastX;
+          phi -= deltaX * 0.01;
+          lastX = e.clientX;
+        }
+      });
+
+      canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        isDragging = false;
+      });
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: 1600,
+        height: 1600,
+        phi: 0,
+        theta: 0.3,
+        dark: 0,
+        diffuse: 0.8,                    // 降低光照对比度
+        mapSamples: 40000,               // 最高采样率，最清晰的线条
+        mapBrightness: 8.5,              // 非常高的亮度让陆地接近白色
+        baseColor: [0.72, 0.76, 0.80],   // 精确匹配截图的浅灰蓝色海洋
+        markerColor: [0.231, 0.510, 0.965],
+        glowColor: [0.80, 0.84, 0.88],   // 柔和光晕
+        markers: markers,
+        opacity: 1,
+        offset: [0, 0],
+        scale: 1,
+        onRender: (state) => {
+          if (!isDragging) {
+            state.phi = phi;
+            phi += 0.003;
+          } else {
+            state.phi = phi;
+          }
+          
+          createLabels(phi, geoLabels);
+        }
+      });
+
+      console.log('Perfect minimalist globe initialized');
+
+      return () => {
+        globe.destroy();
+      };
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPerfectGlobe);
+  } else {
+    initPerfectGlobe();
+  }
+</script>

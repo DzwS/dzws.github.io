@@ -1,0 +1,248 @@
+---
+// 地理风格地球仪 - 浅灰色背景 + 地表文字标签
+---
+
+<div class="geo-globe-container">
+  <div id="geo-globe"></div>
+  <div class="geo-legend">
+    <div class="legend-item">
+      <span class="legend-dot residence"></span>
+      <span class="legend-text">居住</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot travel"></span>
+      <span class="legend-text">旅行</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .geo-globe-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    background: #f5f7fa;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  #geo-globe {
+    width: 100%;
+    aspect-ratio: 1;
+    cursor: grab;
+    position: relative;
+  }
+
+  #geo-globe canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #geo-globe:active {
+    cursor: grabbing;
+  }
+  #geo-globe:active {
+    cursor: grabbing;
+  }
+
+  .geo-legend {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 3;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .legend-dot.residence {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+
+  .legend-dot.travel {
+    background: #f97316;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+  }
+
+  .legend-text {
+    font-size: 13px;
+    color: #4a5568;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .geo-globe-container {
+      padding: 20px;
+    }
+
+    .geo-legend {
+      bottom: 30px;
+      right: 30px;
+      padding: 10px 12px;
+    }
+
+    .legend-text {
+      font-size: 12px;
+    }
+  }
+</style>
+
+<script>
+  // 地理标签（直接显示在地球表面）
+  const geoLabels = [
+    { lat: 45, lng: -140, name: '北太平洋', size: 0.5, color: '#5a6c7d' },
+    { lat: 60, lng: -100, name: '加拿大', size: 0.5, color: '#5a6c7d' },
+    { lat: 38, lng: -95, name: '美国', size: 0.5, color: '#5a6c7d' },
+    { lat: 15, lng: -90, name: '墨西哥', size: 0.4, color: '#5a6c7d' },
+    { lat: -5, lng: -60, name: '巴西', size: 0.4, color: '#5a6c7d' },
+    { lat: 10, lng: -75, name: '哥伦比亚', size: 0.3, color: '#5a6c7d' },
+    { lat: 20, lng: -25, name: '北大西洋', size: 0.4, color: '#5a6c7d' },
+    { lat: 50, lng: 10, name: '欧洲', size: 0.4, color: '#5a6c7d' },
+    { lat: 20, lng: 20, name: '非洲', size: 0.4, color: '#5a6c7d' },
+    { lat: 35, lng: 105, name: '中国', size: 0.5, color: '#5a6c7d' },
+    { lat: 20, lng: -80, name: '加勒比海', size: 0.3, color: '#5a6c7d' },
+  ];
+
+  // 足迹坐标
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', type: 'residence' },
+    { lat: 31.2304, lng: 121.4737, name: '上海', type: 'residence' },
+    { lat: 22.3193, lng: 114.1694, name: '香港', type: 'travel' },
+    { lat: 35.6762, lng: 139.6503, name: '东京', type: 'travel' },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', type: 'travel' },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', type: 'travel' },
+    { lat: 25.0330, lng: 121.5654, name: '台北', type: 'travel' },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', type: 'travel' },
+  ];
+
+  // 初始化地理风格地球仪
+  async function initGeoGlobe() {
+    try {
+      const Globe = (await import('globe.gl')).default;
+      
+      const container = document.getElementById('geo-globe');
+      if (!container) {
+        console.error('Container not found');
+        return;
+      }
+
+      console.log('Initializing geographic globe with labels...');
+
+      // 等待容器渲染完成
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // 导入 THREE.js
+      const THREE = await import('three');
+
+      // 先获取国家数据
+      const countriesData = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+        .then(res => res.json())
+        .then(data => data.features);
+
+      console.log('Countries data loaded:', countriesData.length);
+
+      const globe = Globe()(container)
+        .width(container.offsetWidth)
+        .height(container.offsetWidth)
+        .backgroundColor('rgba(0, 0, 0, 0)')
+        
+        // 使用纯色地球 - 浅灰色
+        .globeMaterial(new THREE.MeshPhongMaterial({
+          color: 0xc5ccd3,  // 浅灰色海洋
+          emissive: 0xe8ecf1,
+          emissiveIntensity: 0.15,
+          shininess: 3,
+        }))
+        
+        // 设置光照
+        .atmosphereColor('#d0d5db')
+        .atmosphereAltitude(0.25)
+        
+        // 添加国家多边形（白色陆地）
+        .polygonsData(countriesData)
+        .polygonCapColor(() => 'rgba(255, 255, 255, 0.85)')  // 白色陆地
+        .polygonSideColor(() => 'rgba(240, 242, 245, 0.7)')  // 侧面稍深
+        .polygonStrokeColor(() => '#dee2e6')  // 边界线
+        .polygonAltitude(0.005)  // 稍微高一点更明显
+        .polygonsTransitionDuration(0)
+        
+        // 添加地理标签（显示在地球表面）
+        .labelsData(geoLabels)
+        .labelLat(d => d.lat)
+        .labelLng(d => d.lng)
+        .labelText(d => d.name)
+        .labelSize(d => d.size || 0.5)
+        .labelDotRadius(0)
+        .labelColor(d => d.color)
+        .labelResolution(3)
+        .labelAltitude(0.01)
+        .labelIncludeDot(false)
+        
+        // 添加城市标记点
+        .pointsData(locations)
+        .pointLat(d => d.lat)
+        .pointLng(d => d.lng)
+        .pointColor(d => d.type === 'residence' ? '#3b82f6' : '#f97316')
+        .pointAltitude(0.02)
+        .pointRadius(0.3)
+        .pointLabel(d => `<div style="background: rgba(255,255,255,0.95); padding: 8px 12px; border-radius: 6px; color: #333; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">${d.name}</div>`)
+        
+        // 控制设置
+        .enablePointerInteraction(true);
+
+      // 设置初始视角
+      globe.pointOfView({ lat: 30, lng: 110, altitude: 2.5 });
+
+      // 自动旋转
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.5;
+      globe.controls().enableZoom = true;
+      globe.controls().minDistance = 150;
+      globe.controls().maxDistance = 500;
+
+      console.log('Geographic globe initialized successfully');
+
+      // 响应窗口大小变化
+      const handleResize = () => {
+        const width = container.offsetWidth;
+        globe.width(width);
+        globe.height(width);
+      };
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    } catch (error) {
+      console.error('Error initializing geographic globe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGeoGlobe);
+  } else {
+    initGeoGlobe();
+  }
+</script>

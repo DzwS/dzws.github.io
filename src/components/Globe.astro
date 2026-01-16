@@ -9,10 +9,10 @@
     width: 100%;
     height: 600px;
     margin: 2rem 0;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(to bottom, #000428, #004e92);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #f8f9fa;
     position: relative;
   }
   
@@ -28,14 +28,14 @@
 </style>
 
 <script>
-  // 足迹数据
+  // 足迹数据 - 简约风格使用统一颜色
   const footprints = [
-    { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#ff6b6b', size: 0.5 },
-    { lat: 31.2304, lng: 121.4737, name: '上海', year: 2024, color: '#4ecdc4', size: 0.5 },
-    { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#45b7d1', size: 0.5 },
-    { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#96ceb4', size: 0.5 },
-    { lat: 37.5665, lng: 126.9780, name: '首尔', year: 2022, color: '#ffeaa7', size: 0.5 },
-    { lat: 1.3521, lng: 103.8198, name: '新加坡', year: 2022, color: '#dfe6e9', size: 0.5 },
+    { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#3498db', size: 0.3 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', year: 2024, color: '#3498db', size: 0.3 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#3498db', size: 0.3 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#3498db', size: 0.3 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', year: 2022, color: '#3498db', size: 0.3 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', year: 2022, color: '#3498db', size: 0.3 },
   ];
 
   // 连接线数据
@@ -63,48 +63,51 @@
 
         try {
           const globe = Globe()(container)
-            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-            .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-            .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+            // 简约风格：纯色地球 + 简洁背景
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
+            .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
             
-            // 添加足迹点
+            // 添加足迹点 - 简约风格
             .pointsData(footprints)
-            .pointAltitude('size')
+            .pointAltitude(0.01)
             .pointColor('color')
-            .pointRadius(0.5)
+            .pointRadius(0.6)
             .pointLabel((d) => `
               <div style="
-                background: rgba(0, 0, 0, 0.8);
-                padding: 8px 12px;
-                border-radius: 6px;
-                color: white;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 6px 10px;
+                border-radius: 4px;
+                color: #333;
                 font-family: system-ui, -apple-system, sans-serif;
+                font-size: 13px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
               ">
-                <strong>${d.name}</strong><br/>
-                <span style="opacity: 0.8;">${d.year}</span>
+                <strong>${d.name}</strong> · ${d.year}
               </div>
             `)
             
-            // 添加连接线
+            // 简约风格连接线 - 细线
             .arcsData(arcs)
-            .arcColor(() => 'rgba(255, 255, 255, 0.5)')
-            .arcDashLength(0.4)
-            .arcDashGap(0.2)
-            .arcDashAnimateTime(2000)
-            .arcStroke(0.5)
+            .arcColor(() => 'rgba(52, 152, 219, 0.4)')
+            .arcDashLength(0.3)
+            .arcDashGap(0.3)
+            .arcDashAnimateTime(3000)
+            .arcStroke(0.3)
             
-            // 添加光晕效果
-            .atmosphereColor('lightskyblue')
-            .atmosphereAltitude(0.15)
+            // 简约光晕效果
+            .atmosphereColor('rgba(52, 152, 219, 0.5)')
+            .atmosphereAltitude(0.12)
             
             // 控制设置
             .enablePointerInteraction(true);
 
-          // 自动旋转
+          // 自动旋转 - 慢速
           if (globe.controls) {
             globe.controls().autoRotate = true;
-            globe.controls().autoRotateSpeed = 0.5;
+            globe.controls().autoRotateSpeed = 0.3;
             globe.controls().enableZoom = true;
+            globe.controls().minDistance = 150;
+            globe.controls().maxDistance = 500;
           }
 
           // 设置初始视角 - 聚焦在中国

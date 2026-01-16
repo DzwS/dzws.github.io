@@ -1,0 +1,235 @@
+---
+// 极简主义风格地球仪 - 低饱和度、扁平化、3D效果
+---
+
+<div class="minimalist-globe-container">
+  <canvas 
+    id="minimalist-canvas" 
+    width="600" 
+    height="600"
+  ></canvas>
+  <div id="minimalist-labels"></div>
+</div>
+
+<style>
+  .minimalist-globe-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  #minimalist-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: grab;
+    transition: transform 0.2s ease;
+  }
+
+  #minimalist-canvas:active {
+    cursor: grabbing;
+  }
+
+  #minimalist-labels {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .minimalist-label {
+    position: absolute;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4a5568;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(4px);
+  }
+
+  @media (max-width: 768px) {
+    .minimalist-globe-container {
+      padding: 20px;
+    }
+
+    #minimalist-labels {
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+    }
+
+    .minimalist-label {
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹坐标
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.12 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.12 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.10 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.10 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.10 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.10 },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.09 },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.09 },
+  ];
+
+  // 转换为弧度
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.1,
+  }));
+
+  // 创建极简标签
+  function createMinimalistLabels(phi, theta, locations) {
+    const labelsContainer = document.getElementById('minimalist-labels');
+    if (!labelsContainer) return;
+
+    labelsContainer.innerHTML = '';
+
+    const radius = 250;
+    const centerX = 300;
+    const centerY = 300;
+
+    locations.forEach(loc => {
+      const lat = toRadians(loc.lat);
+      const lng = toRadians(loc.lng);
+
+      const cosPhi = Math.cos(lat);
+      const sinPhi = Math.sin(lat);
+      const cosTheta = Math.cos(lng + phi);
+      const sinTheta = Math.sin(lng + phi);
+
+      const x = radius * cosPhi * sinTheta;
+      const y = -radius * sinPhi;
+      const z = radius * cosPhi * cosTheta;
+
+      if (z > 0) {
+        const label = document.createElement('div');
+        label.className = 'minimalist-label';
+        label.textContent = loc.name;
+        label.style.left = (centerX + x) + 'px';
+        label.style.top = (centerY + y) + 'px';
+        
+        const opacity = Math.min(1, z / radius + 0.2);
+        label.style.opacity = opacity;
+        
+        labelsContainer.appendChild(label);
+      }
+    });
+  }
+
+  // 初始化极简风格地球仪
+  async function initMinimalistGlobe() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('minimalist-canvas');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing minimalist globe...');
+
+      let phi = 0;
+      let isDragging = false;
+      let lastX = 0;
+
+      // 鼠标拖拽控制
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          const deltaX = e.clientX - lastX;
+          phi -= deltaX * 0.01;
+          lastX = e.clientX;
+        }
+      });
+
+      canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        isDragging = false;
+      });
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: 1600,
+        height: 1600,
+        phi: 0,
+        theta: 0.3,
+        dark: 0,                    // 亮色模式
+        diffuse: 1.2,               // 柔和光照
+        mapSamples: 28000,          // 高密度采样，清晰线条
+        mapBrightness: 6.5,         // 地图亮度
+        baseColor: [0.9, 0.92, 0.95],     // 极淡的蓝灰色基底
+        markerColor: [0.4, 0.5, 0.65],    // 低饱和度蓝色标记
+        glowColor: [0.85, 0.88, 0.92],    // 柔和光晕
+        markers: markers,
+        opacity: 0.85,              // 稍微透明，更轻盈
+        offset: [0, 0],
+        scale: 1,
+        onRender: (state) => {
+          if (!isDragging) {
+            // 不拖拽时缓慢自动旋转
+            state.phi = phi;
+            phi += 0.003;
+          } else {
+            state.phi = phi;
+          }
+          
+          // 更新标签位置
+          createMinimalistLabels(phi, 0.3, locations);
+        }
+      });
+
+      console.log('Minimalist globe initialized successfully');
+
+      // 清理
+      return () => {
+        globe.destroy();
+      };
+    } catch (error) {
+      console.error('Error initializing minimalist globe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMinimalistGlobe);
+  } else {
+    initMinimalistGlobe();
+  }
+</script>

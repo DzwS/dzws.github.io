@@ -1,0 +1,355 @@
+---
+// 使用 Three.js 自定义渲染的简约地球仪
+---
+
+<div class="custom-globe-container">
+  <div id="custom-globe"></div>
+  <div class="custom-legend">
+    <div class="legend-item">
+      <span class="legend-dot residence"></span>
+      <span class="legend-text">居住</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot travel"></span>
+      <span class="legend-text">旅行</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .custom-globe-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    background: #f5f7fa;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  #custom-globe {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    cursor: grab;
+  }
+
+  #custom-globe:active {
+    cursor: grabbing;
+  }
+
+  #custom-globe canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .custom-legend {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 3;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .legend-dot.residence {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+
+  .legend-dot.travel {
+    background: #f97316;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+  }
+
+  .legend-text {
+    font-size: 13px;
+    color: #4a5568;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .custom-globe-container {
+      padding: 20px;
+    }
+
+    #custom-globe {
+      height: 400px;
+    }
+
+    .custom-legend {
+      bottom: 30px;
+      right: 30px;
+      padding: 10px 12px;
+    }
+  }
+</style>
+
+<script>
+  // 地理标签
+  const geoLabels = [
+    { lat: 45, lng: -140, name: '北太平洋' },
+    { lat: 60, lng: -100, name: '加拿大' },
+    { lat: 38, lng: -95, name: '美国' },
+    { lat: 15, lng: -90, name: '墨西哥' },
+    { lat: -8, lng: -55, name: '巴西' },
+    { lat: 10, lng: -75, name: '哥伦比亚' },
+    { lat: 20, lng: -25, name: '北大西洋' },
+    { lat: 50, lng: 10, name: '欧洲' },
+    { lat: 20, lng: 20, name: '非洲' },
+    { lat: 35, lng: 105, name: '中国' },
+  ];
+
+  // 足迹坐标
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', type: 'residence' },
+    { lat: 31.2304, lng: 121.4737, name: '上海', type: 'residence' },
+    { lat: 22.3193, lng: 114.1694, name: '香港', type: 'travel' },
+    { lat: 35.6762, lng: 139.6503, name: '东京', type: 'travel' },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', type: 'travel' },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', type: 'travel' },
+    { lat: 25.0330, lng: 121.5654, name: '台北', type: 'travel' },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', type: 'travel' },
+  ];
+
+  // 初始化 Three.js 地球仪
+  async function initCustomGlobe() {
+    try {
+      const THREE = await import('three');
+      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
+      
+      const container = document.getElementById('custom-globe');
+      if (!container) {
+        console.error('Container not found');
+        return;
+      }
+
+      console.log('Initializing custom Three.js globe...');
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      // 创建场景
+      const scene = new THREE.Scene();
+      scene.background = null;
+
+      // 创建相机
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.z = 300;
+
+      // 创建渲染器
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      // 添加轨道控制
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.5;
+      controls.enableZoom = true;
+      controls.minDistance = 150;
+      controls.maxDistance = 500;
+
+      // 创建地球球体（浅灰色海洋）
+      const globeGeometry = new THREE.SphereGeometry(100, 64, 64);
+      const globeMaterial = new THREE.MeshPhongMaterial({
+        color: 0xc5cdd5,  // 浅灰蓝色海洋
+        emissive: 0xdce3e9,
+        emissiveIntensity: 0.15,
+        shininess: 3,
+        transparent: false,
+      });
+      const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+      scene.add(globe);
+
+      // 加载并绘制国家边界
+      fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+        .then(res => res.json())
+        .then(data => {
+          console.log('Countries data loaded:', data.features.length, 'countries');
+          
+          // 为每个国家创建边界线
+          data.features.forEach(feature => {
+            if (feature.geometry.type === 'Polygon') {
+              drawPolygon(feature.geometry.coordinates, scene);
+            } else if (feature.geometry.type === 'MultiPolygon') {
+              feature.geometry.coordinates.forEach(polygon => {
+                drawPolygon(polygon, scene);
+              });
+            }
+          });
+          
+          // 添加国家名称标签
+          addCountryLabels(scene);
+        })
+        .catch(error => console.error('Error loading countries:', error));
+
+      // 绘制多边形边界
+      function drawPolygon(coordinates, scene) {
+        coordinates.forEach(ring => {
+          const points = [];
+          ring.forEach(coord => {
+            const [lng, lat] = coord;
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lng + 180) * (Math.PI / 180);
+            
+            const x = -100.1 * Math.sin(phi) * Math.cos(theta);
+            const y = 100.1 * Math.cos(phi);
+            const z = 100.1 * Math.sin(phi) * Math.sin(theta);
+            
+            points.push(new THREE.Vector3(x, y, z));
+          });
+          
+          if (points.length > 1) {
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMaterial = new THREE.LineBasicMaterial({
+              color: 0xffffff,  // 白色边界线
+              transparent: true,
+              opacity: 0.85,
+              linewidth: 1.5,
+            });
+            const line = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(line);
+          }
+        });
+      }
+
+      // 添加国家名称标签
+      function addCountryLabels(scene) {
+        const importantCountries = [
+          { name: '加拿大', lat: 56, lng: -96 },
+          { name: '美国', lat: 38, lng: -97 },
+          { name: '墨西哥', lat: 23, lng: -102 },
+          { name: '巴西', lat: -10, lng: -55 },
+          { name: '中国', lat: 35, lng: 105 },
+          { name: '俄罗斯', lat: 60, lng: 100 },
+          { name: '澳大利亚', lat: -25, lng: 133 },
+          { name: '印度', lat: 20, lng: 77 },
+          { name: '欧洲', lat: 50, lng: 10 },
+          { name: '非洲', lat: 0, lng: 20 },
+          { name: '南美洲', lat: -15, lng: -60 },
+        ];
+
+        importantCountries.forEach(country => {
+          const phi = (90 - country.lat) * (Math.PI / 180);
+          const theta = (country.lng + 180) * (Math.PI / 180);
+          
+          const x = -103 * Math.sin(phi) * Math.cos(theta);
+          const y = 103 * Math.cos(phi);
+          const z = 103 * Math.sin(phi) * Math.sin(theta);
+
+          // 创建文本精灵
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = 256;
+          canvas.height = 64;
+          
+          context.fillStyle = 'rgba(0, 0, 0, 0)';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          
+          context.font = 'Bold 28px Arial, sans-serif';
+          context.fillStyle = '#5a6c7d';
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillText(country.name, 128, 32);
+          
+          const texture = new THREE.CanvasTexture(canvas);
+          const spriteMaterial = new THREE.SpriteMaterial({ 
+            map: texture,
+            transparent: true,
+            opacity: 0.75,
+            depthTest: false,
+          });
+          const sprite = new THREE.Sprite(spriteMaterial);
+          sprite.position.set(x, y, z);
+          sprite.scale.set(18, 4.5, 1);
+          
+          scene.add(sprite);
+        });
+      }
+
+      // 添加城市标记点
+      locations.forEach(loc => {
+        const phi = (90 - loc.lat) * (Math.PI / 180);
+        const theta = (loc.lng + 180) * (Math.PI / 180);
+        
+        const x = -101 * Math.sin(phi) * Math.cos(theta);
+        const y = 101 * Math.cos(phi);
+        const z = 101 * Math.sin(phi) * Math.sin(theta);
+        
+        const markerGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+        const markerMaterial = new THREE.MeshBasicMaterial({
+          color: loc.type === 'residence' ? 0x3b82f6 : 0xf97316,
+        });
+        const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+        marker.position.set(x, y, z);
+        scene.add(marker);
+      });
+
+      // 添加环境光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      // 添加定向光
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(5, 3, 5);
+      scene.add(directionalLight);
+
+      // 动画循环
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // 响应窗口大小变化
+      function handleResize() {
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+      window.addEventListener('resize', handleResize);
+
+      console.log('Custom globe initialized successfully');
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        renderer.dispose();
+      };
+    } catch (error) {
+      console.error('Error initializing custom globe:', error);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCustomGlobe);
+  } else {
+    initCustomGlobe();
+  }
+</script>

@@ -1,0 +1,122 @@
+---
+// Cobe 地球仪增强版 - 带暗色主题和更多标记
+---
+
+<div class="cobe-container">
+  <canvas 
+    id="cobe-canvas-enhanced" 
+    width="800" 
+    height="800"
+  ></canvas>
+</div>
+
+<style>
+  .cobe-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #cobe-canvas-enhanced {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .cobe-container {
+      max-width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+    }
+  }
+</style>
+
+<script>
+  // 足迹数据
+  const locations = [
+    { lat: 39.9042, lng: 116.4074, name: '北京', size: 0.1 },
+    { lat: 31.2304, lng: 121.4737, name: '上海', size: 0.1 },
+    { lat: 22.3193, lng: 114.1694, name: '香港', size: 0.08 },
+    { lat: 35.6762, lng: 139.6503, name: '东京', size: 0.08 },
+    { lat: 37.5665, lng: 126.9780, name: '首尔', size: 0.08 },
+    { lat: 1.3521, lng: 103.8198, name: '新加坡', size: 0.08 },
+    { lat: 25.0330, lng: 121.5654, name: '台北', size: 0.07 },
+    { lat: 13.7563, lng: 100.5018, name: '曼谷', size: 0.07 },
+  ];
+
+  // 转换为弧度
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
+  const markers = locations.map(loc => ({
+    location: [toRadians(loc.lat), toRadians(loc.lng)],
+    size: loc.size || 0.08,
+  }));
+
+  // 初始化增强版 Cobe
+  async function initCobeEnhanced() {
+    try {
+      const createGlobe = (await import('cobe')).default;
+      const canvas = document.getElementById('cobe-canvas-enhanced');
+      
+      if (!canvas) {
+        console.error('Canvas not found');
+        return;
+      }
+
+      console.log('Initializing enhanced Cobe globe...');
+
+      let phi = 0;
+      let theta = 0;
+
+      const globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: 1600,
+        height: 1600,
+        phi: 0,
+        theta: 0.3,
+        dark: 1,              // 暗色模式
+        diffuse: 3,           // 漫反射强度
+        mapSamples: 20000,    // 地图采样数（更高 = 更详细）
+        mapBrightness: 1.2,   // 地图亮度
+        baseColor: [0.1, 0.1, 0.1],         // 基础颜色（深灰）
+        markerColor: [1, 0.4, 0.4],         // 标记颜色（红色）
+        glowColor: [0.4, 0.6, 1],           // 光晕颜色（蓝色）
+        markers: markers,
+        onRender: (state) => {
+          // 自动旋转
+          state.phi = phi;
+          phi += 0.003;
+          
+          // 轻微上下摆动
+          state.theta = 0.3 + Math.sin(phi * 2) * 0.1;
+        }
+      });
+
+      console.log('Enhanced Cobe globe initialized');
+
+      // 清理
+      return () => {
+        globe.destroy();
+      };
+    } catch (error) {
+      console.error('Error initializing enhanced Cobe:', error);
+    }
+  }
+
+  // 等待 DOM 加载
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCobeEnhanced);
+  } else {
+    initCobeEnhanced();
+  }
+</script>

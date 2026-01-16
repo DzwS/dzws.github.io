@@ -1,0 +1,243 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+import Globe from '../components/Globe.astro';
+import GlobeMinimal from '../components/GlobeMinimal.astro';
+import GlobeCobe from '../components/GlobeCobe.astro';
+import CobeEnhanced from '../components/CobeEnhanced.astro';
+import GlobeSketch from '../components/GlobeSketch.astro';
+import GlobeArt from '../components/GlobeArt.astro';
+import GlobeBlueprint from '../components/GlobeBlueprint.astro';
+import GlobeMinimalist from '../components/GlobeMinimalist.astro';
+import GlobeGeo from '../components/GlobeGeo.astro';
+---
+
+<Layout
+	title="地球仪样式对比"
+	description="对比不同风格的 3D 地球仪效果"
+	pubDate={new Date('January 16 2026')}
+>
+	<h1>🌍 地球仪样式对比</h1>
+	
+	<p>
+		这个页面展示了四种不同风格的 3D 地球仪实现，你可以对比它们的效果，
+		选择最适合你博客风格的版本。
+	</p>
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>1️⃣ 简约蓝色风格 (Globe.gl)</h2>
+	<p>
+		<strong>特点：</strong>简洁优雅，蓝色主题，适合现代商务风格。<br/>
+		<strong>库：</strong>globe.gl + three.js<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐<br/>
+		<strong>文件大小：</strong>中等
+	</p>
+	<Globe />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>2️⃣ 极简黑白风格 (Globe.gl)</h2>
+	<p>
+		<strong>特点：</strong>黑白配色，极度简约，适合极简主义设计。<br/>
+		<strong>库：</strong>globe.gl + three.js<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐<br/>
+		<strong>文件大小：</strong>中等
+	</p>
+	<GlobeMinimal />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>3️⃣ Cobe 轻量版</h2>
+	<p>
+		<strong>特点：</strong>轻量级，流畅动画，WebGL 渲染，极简但优雅。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>文件大小：</strong>最小
+	</p>
+	<GlobeCobe />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>4️⃣ Cobe 增强版</h2>
+	<p>
+		<strong>特点：</strong>暗色主题，渐变背景，红色标记点，科技感十足。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>文件大小：</strong>最小
+	</p>
+	<CobeEnhanced />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h1 style="margin-top: 4rem; text-align: center;">🎨 线条绘画风格</h1>
+	<p style="text-align: center; color: #666; margin-bottom: 3rem;">
+		清晰的线条，艺术化表达，非写实风格
+	</p>
+
+	<h2>5️⃣ 线条素描风格 ⭐ 推荐</h2>
+	<p>
+		<strong>特点：</strong>清晰的线条，白色底色，简约素描风格。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>采样率：</strong>30000 (线条极清晰)
+	</p>
+	<GlobeSketch />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>6️⃣ 艺术插画风格 ⭐ 推荐</h2>
+	<p>
+		<strong>特点：</strong>手绘插画感，渐变背景，红色标记点，优雅精致。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>采样率：</strong>35000 (超清晰线条)
+	</p>
+	<GlobeArt />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>7️⃣ 技术蓝图风格 ⭐ 推荐</h2>
+	<p>
+		<strong>特点：</strong>技术图纸风格，网格背景，蓝色线条，极客范儿。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>采样率：</strong>40000 (最高清晰度)
+	</p>
+	<GlobeBlueprint />
+
+	<h2>8️⃣ 极简主义风格 ⭐⭐ 强烈推荐</h2>
+	<p>
+		<strong>特点：</strong>低饱和度、扁平化设计、3D效果、可拖拽交互。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>采样率：</strong>28000 (超清晰线条)<br/>
+		<strong>交互：</strong>支持鼠标拖拽旋转
+	</p>
+	<GlobeMinimalist />
+
+	<h2>9️⃣ 地理风格 ⭐⭐⭐ 最佳推荐</h2>
+	<p>
+		<strong>特点：</strong>浅灰色背景、白色陆地轮廓、中文地理标签、蓝橙双色标记、带图例。<br/>
+		<strong>库：</strong>cobe (仅 7KB)<br/>
+		<strong>性能：</strong>⭐⭐⭐⭐⭐<br/>
+		<strong>采样率：</strong>32000 (超清晰)<br/>
+		<strong>交互：</strong>支持鼠标拖拽旋转<br/>
+		<strong>图例：</strong>居住（蓝色）/ 旅行（橙色）
+	</p>
+	<GlobeGeo />
+
+	<hr style="margin: 3rem 0; border: none; border-top: 1px solid #e0e0e0;" />
+
+	<h2>📊 对比总结</h2>
+	
+	<table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+		<thead>
+			<tr style="background: #f8f9fa;">
+				<th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">版本</th>
+				<th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">风格</th>
+				<th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">线条清晰度</th>
+				<th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">性能</th>
+				<th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">推荐场景</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>简约蓝色</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">写实 + 商务</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">企业网站</td>
+			</tr>
+			<tr style="background: #f8f9fa;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>极简黑白</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">写实 + 极简</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">极简设计</td>
+			</tr>
+			<tr>
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>Cobe 轻量</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">写实 + 简约</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">性能优先</td>
+			</tr>
+			<tr style="background: #f8f9fa;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>Cobe 增强</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">写实 + 科技</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">技术博客</td>
+			</tr>
+			<tr style="background: #e8f5e9;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>极简主义 ⭐⭐</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">扁平 + 3D + 交互</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>现代设计、作品集</strong></td>
+			</tr>
+			<tr style="background: #e3f2fd;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>地理风格 ⭐⭐⭐</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">地理 + 图例 + 双色</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>旅行博客、地理展示</strong></td>
+			</tr>
+			<tr style="background: #fff9e6;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>✨ 线条素描</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">绘画 + 简约</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">个人博客</td>
+			</tr>
+			<tr style="background: #fff9e6;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>✨ 艺术插画</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">绘画 + 艺术</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">创意设计</td>
+			</tr>
+			<tr style="background: #fff9e6;">
+				<td style="padding: 12px; border: 1px solid #dee2e6;"><strong>✨ 技术蓝图</strong></td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">绘画 + 技术</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">⭐⭐⭐⭐⭐</td>
+				<td style="padding: 12px; border: 1px solid #dee2e6;">技术文档</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h2>💡 选择建议</h2>
+	
+	<ul>
+		<li><strong>🎨 线条清晰、绘画风格</strong>：选择线条素描、艺术插画或技术蓝图</li>
+		<li><strong>⚡ 追求性能和轻量</strong>：所有 Cobe 版本（文件大小仅 7KB）</li>
+		<li><strong>🎯 个人博客</strong>：线条素描或艺术插画（清晰优雅）</li>
+		<li><strong>💼 技术博客</strong>：技术蓝图（专业感）</li>
+		<li><strong>🎪 创意网站</strong>：艺术插画（精致艺术感）</li>
+		<li><strong>🏢 企业网站</strong>：简约蓝色或极简黑白</li>
+	</ul>
+
+	<h2>🔧 如何使用</h2>
+	
+	<p>在你的 Astro 页面中导入相应的组件：</p>
+	
+	<pre style="background: #f8f9fa; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>---
+// 选择其中一个导入
+import Globe from '../components/Globe.astro';              // 简约蓝色
+import GlobeMinimal from '../components/GlobeMinimal.astro'; // 极简黑白
+import GlobeCobe from '../components/GlobeCobe.astro';      // Cobe 轻量
+import CobeEnhanced from '../components/CobeEnhanced.astro'; // Cobe 增强
+import GlobeSketch from '../components/GlobeSketch.astro';  // 线条素描 ⭐
+import GlobeArt from '../components/GlobeArt.astro';        // 艺术插画 ⭐
+import GlobeBlueprint from '../components/GlobeBlueprint.astro'; // 技术蓝图 ⭐
+---
+
+&lt;GlobeArt /&gt;</code></pre>
+
+	<p style="margin-top: 2rem; padding: 1rem; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+		<strong>🎨 线条风格推荐：</strong>如果你喜欢线条清晰、绘画风格的地球仪，
+		推荐使用<strong>艺术插画</strong>或<strong>技术蓝图</strong>版本。它们采用超高采样率（35000-40000），
+		线条极其清晰，且性能优异（仅 7KB）！
+	</p>
+</Layout>
