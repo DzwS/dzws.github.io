@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地球仪测试</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a1a2e;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    h1 {
+      color: white;
+      text-align: center;
+    }
+    
+    #globe-container {
+      width: 100%;
+      height: 600px;
+      margin: 2rem auto;
+      max-width: 1200px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(to bottom, #000428, #004e92);
+    }
+    
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌍 交互式地球仪测试</h1>
+  <div id="globe-container" style="position: relative;">
+    <div id="loading">正在加载地球仪...</div>
+  </div>
+
+  <script type="module">
+    // 直接使用 CDN
+    import Globe from 'https://cdn.skypack.dev/globe.gl';
+
+    // 足迹数据
+    const footprints = [
+      { lat: 39.9042, lng: 116.4074, name: '北京', year: 2024, color: '#ff6b6b', size: 0.5 },
+      { lat: 31.2304, lng: 121.4737, name: '上海', year: 2024, color: '#4ecdc4', size: 0.5 },
+      { lat: 22.3193, lng: 114.1694, name: '香港', year: 2023, color: '#45b7d1', size: 0.5 },
+      { lat: 35.6762, lng: 139.6503, name: '东京', year: 2023, color: '#96ceb4', size: 0.5 },
+      { lat: 37.5665, lng: 126.9780, name: '首尔', year: 2022, color: '#ffeaa7', size: 0.5 },
+      { lat: 1.3521, lng: 103.8198, name: '新加坡', year: 2022, color: '#dfe6e9', size: 0.5 },
+    ];
+
+    // 连接线数据
+    const arcs = [
+      { startLat: 39.9042, startLng: 116.4074, endLat: 31.2304, endLng: 121.4737 },
+      { startLat: 31.2304, startLng: 121.4737, endLat: 22.3193, endLng: 114.1694 },
+      { startLat: 22.3193, startLng: 114.1694, endLat: 35.6762, endLng: 139.6503 },
+    ];
+
+    try {
+      const container = document.getElementById('globe-container');
+      const loading = document.getElementById('loading');
+      
+      console.log('开始初始化地球仪...');
+      
+      const globe = Globe()(container)
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+        .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+        
+        // 添加足迹点
+        .pointsData(footprints)
+        .pointAltitude('size')
+        .pointColor('color')
+        .pointRadius(0.5)
+        .pointLabel((d) => `
+          <div style="
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: white;
+          ">
+            <strong>${d.name}</strong><br/>
+            <span style="opacity: 0.8;">${d.year}</span>
+          </div>
+        `)
+        
+        // 添加连接线
+        .arcsData(arcs)
+        .arcColor(() => 'rgba(255, 255, 255, 0.5)')
+        .arcDashLength(0.4)
+        .arcDashGap(0.2)
+        .arcDashAnimateTime(2000)
+        .arcStroke(0.5)
+        
+        // 添加光晕效果
+        .atmosphereColor('lightskyblue')
+        .atmosphereAltitude(0.15)
+        
+        // 控制设置
+        .enablePointerInteraction(true);
+
+      // 自动旋转
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.5;
+      globe.controls().enableZoom = true;
+
+      // 设置初始视角
+      globe.pointOfView({ lat: 35, lng: 105, altitude: 2 }, 1000);
+
+      // 响应式处理
+      const handleResize = () => {
+        globe.width(container.offsetWidth);
+        globe.height(container.offsetHeight);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      setTimeout(handleResize, 100);
+
+      // 添加点击交互
+      globe.onPointClick((point) => {
+        globe.pointOfView({
+          lat: point.lat,
+          lng: point.lng,
+          altitude: 1.5
+        }, 1000);
+      });
+
+      // 移除加载提示
+      setTimeout(() => {
+        if (loading) loading.style.display = 'none';
+      }, 2000);
+
+      console.log('地球仪初始化成功！');
+    } catch (error) {
+      console.error('地球仪加载失败:', error);
+      document.getElementById('globe-container').innerHTML = `
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          color: white;
+          text-align: center;
+          padding: 2rem;
+        ">
+          <div>
+            <p style="font-size: 1.5rem; margin-bottom: 1rem;">😅</p>
+            <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">地球仪加载失败</p>
+            <p style="opacity: 0.7;">错误: ${error.message}</p>
+            <p style="opacity: 0.7; margin-top: 1rem;">请检查控制台查看详细信息</p>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
