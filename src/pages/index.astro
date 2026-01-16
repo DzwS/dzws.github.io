@@ -97,8 +97,8 @@ const posts = (await getCollection('blog'))
 			.skill-tag {
 				display: inline-block;
 				padding: 0.5rem 1rem;
-				background: rgba(var(--accent-rgb, 136, 58, 234), 0.1);
-				color: var(--accent);
+				background: rgba(0, 0, 0, 0.05);
+				color: #333;
 				border-radius: 20px;
 				font-size: 0.9rem;
 				font-weight: 500;
@@ -150,7 +150,7 @@ const posts = (await getCollection('blog'))
 			}
 
 			.post-card:hover {
-				border-color: var(--accent);
+				border-color: #1a1a1a;
 				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 				transform: translateY(-2px);
 			}
@@ -243,7 +243,7 @@ const posts = (await getCollection('blog'))
 		<main>
 			<section class="hero">
 				<div class="hero-content">
-					<h1>你好，我是 DzwS 👋</h1>
+					<h1>你好，我是 DzwS</h1>
 					<p class="tagline">
 						一名热爱技术的开发者，专注于云原生、人工智能和系统架构。<br/>
 						喜欢探索新技术，记录学习过程，分享实践经验。
